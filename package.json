@@ -1,0 +1,23 @@
+{
+  "name": "lottery",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "keywords": [
+    "solidity",
+    "lottery"
+  ],
+  "author": "Osamudiamen",
+  "license": "ISC",
+  "dependencies": {
+    "@truffle/hdwallet-provider": "^2.0.3",
+    "dotenv": "^16.0.0",
+    "ganache-cli": "^6.12.2",
+    "mocha": "^9.2.0",
+    "solc": "^0.8.11",
+    "web3": "^1.7.0"
+  }
+}
