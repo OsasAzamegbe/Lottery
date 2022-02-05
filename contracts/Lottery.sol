@@ -9,7 +9,7 @@ contract Lottery {
         m_manager = msg.sender;
     }
 
-    function getPlayers() public view returns(address payable[] memory) {
+    function getPlayers() public view returns (address payable[] memory) {
         return m_players;
     }
 
