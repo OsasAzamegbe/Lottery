@@ -28,4 +28,102 @@ describe('LotteryTest', () => {
         const lotteryManagerAccount = await lotteryContract.methods.m_manager().call();
         assert.equal(managerAccount, lotteryManagerAccount);
     });
+
+    it('Player can enter lottery', async () => {
+        const player1 = accounts[1];
+
+        await lotteryContract.methods.enterLottery()
+            .send({ from: player1, value: web3.utils.toWei('0.01', 'ether') });
+        const actualPlayers = await lotteryContract.methods.getPlayers().call();
+
+        assert.equal(1, actualPlayers.length);
+        assert.equal(player1, actualPlayers[0]);
+    });
+
+    it('Manager can enter lottery', async () => {
+        await lotteryContract.methods.enterLottery()
+            .send({ from: managerAccount, value: web3.utils.toWei('0.01', 'ether') });
+        const actualPlayers = await lotteryContract.methods.getPlayers().call();
+
+        assert.equal(1, actualPlayers.length);
+        assert.equal(managerAccount, actualPlayers[0]);
+    });
+
+    it('Multiple players can enter lottery', async () => {
+        const [player1, player2, player3] = accounts;
+
+        await lotteryContract.methods.enterLottery()
+            .send({ from: player1, value: web3.utils.toWei('0.01', 'ether') });
+        await lotteryContract.methods.enterLottery()
+            .send({ from: player2, value: web3.utils.toWei('0.01', 'ether') });
+        await lotteryContract.methods.enterLottery()
+            .send({ from: player3, value: web3.utils.toWei('0.01', 'ether') });
+
+        const actualPlayers = await lotteryContract.methods.getPlayers().call();
+
+        assert.equal(3, actualPlayers.length);
+        assert.equal(player1, actualPlayers[0]);
+        assert.equal(player2, actualPlayers[1]);
+        assert.equal(player3, actualPlayers[2]);
+    });
+
+    it('Fails to enter lottery if player sends zero wei', async () => {
+        const player1 = accounts[1];
+
+        try {
+            await lotteryContract.methods.enterLottery()
+                .send({ from: player1, value: 0 });
+
+            assert(false);
+        } catch (error) {
+            assert(error);
+        }
+
+        const actualPlayers = await lotteryContract.methods.getPlayers().call();
+
+        assert.equal(0, actualPlayers.length);
+    });
+
+    it('Fails to enter lottery if player does not send enough wei', async () => {
+        const player1 = accounts[1];
+
+        try {
+            await lotteryContract.methods.enterLottery()
+                .send({ from: player1, value: web3.utils.toWei('0.009', 'ether') });
+
+            assert(false);
+        } catch (error) {
+            assert(error);
+        }
+
+        const actualPlayers = await lotteryContract.methods.getPlayers().call();
+
+        assert.equal(0, actualPlayers.length);
+    });
+
+    it('Manager can call pickWinner', async () => {
+        const player1 = accounts[1];
+
+        await lotteryContract.methods.enterLottery()
+            .send({ from: player1, value: web3.utils.toWei('0.01', 'ether') });
+        await lotteryContract.methods.pickWinner()
+            .send({ from: managerAccount });
+    });
+
+    it('Non-manager cannot call pickWinner', async () => {
+        const randomAccount = accounts[1];
+        assert.notEqual(managerAccount, randomAccount);
+
+        await lotteryContract.methods.enterLottery()
+            .send({ from: randomAccount, value: web3.utils.toWei('0.01', 'ether') });
+
+        try {
+            await lotteryContract.methods.pickWinner()
+                .send({ from: randomAccount });
+
+            assert(false);
+        } catch (error) {
+            assert(error);
+        }
+    });
 })
