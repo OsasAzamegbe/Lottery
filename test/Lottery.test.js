@@ -126,4 +126,45 @@ describe('LotteryTest', () => {
             assert(error);
         }
     });
+
+    it('Contract players reset after pickWinner is called', async () => {
+        const player = accounts[1];
+
+        await lotteryContract.methods.enterLottery()
+            .send({ from: player, value: web3.utils.toWei('0.01', 'ether') });
+        await lotteryContract.methods.pickWinner()
+            .send({ from: managerAccount });
+        const lotteryPlayers = await lotteryContract.methods.getPlayers().call();
+
+        assert.equal(0, lotteryPlayers.length);
+    });
+
+    it('Winner is paid after pickWinner is called', async () => {
+        const player = accounts[1];
+        const lotteryPot = web3.utils.toWei('1', 'ether');
+
+        await lotteryContract.methods.enterLottery()
+            .send({ from: player, value: lotteryPot });
+        const initialBalance = await web3.eth.getBalance(player);
+        await lotteryContract.methods.pickWinner()
+            .send({ from: managerAccount });
+        const balanceChange = await web3.eth.getBalance(player) - initialBalance;
+
+        assert(balanceChange > lotteryPot * 0.95); //reduce by 5% for potential gas fees while playing lottery
+    });
+
+    it('Lottery balance equals total money sent by players', async () => {
+        const [player1, player2, player3] = accounts;
+
+        await lotteryContract.methods.enterLottery()
+            .send({ from: player1, value: web3.utils.toWei('0.01', 'ether') });
+        await lotteryContract.methods.enterLottery()
+            .send({ from: player2, value: web3.utils.toWei('0.01', 'ether') });
+        await lotteryContract.methods.enterLottery()
+            .send({ from: player3, value: web3.utils.toWei('0.01', 'ether') });
+
+        const lotteryBalance = await web3.eth.getBalance(lotteryContract.options.address);
+
+        assert.equal(web3.utils.toWei('0.03', 'ether'), lotteryBalance);
+    });
 })
