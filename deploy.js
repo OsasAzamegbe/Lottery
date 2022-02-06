@@ -20,7 +20,7 @@ const deploy = async () => {
         .deploy({ data: evm.bytecode.object})
         .send({from: accounts[0], gas: '1000000'});
 
-    console.log('Lottery contract with ABI:', abi);
+    console.log('Lottery contract with ABI:', JSON.stringify(abi));
     console.log('Lottery contract deployed to address:', txnObj.options.address)
 
     accountProvider.engine.stop();
